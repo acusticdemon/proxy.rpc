@@ -1,5 +1,11 @@
 # Proxy.rpc
 
+## Install
+
+```$xslt
+npm i --save proxy.rpc 
+```
+
 ## Run
 
 ```

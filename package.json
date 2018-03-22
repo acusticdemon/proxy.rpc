@@ -1,0 +1,28 @@
+{
+  "name": "proxy.rpc",
+  "version": "1.0.0",
+  "description": "Proxy lib for connection at remote rpc service",
+  "main": "index.js",
+  "scripts": {
+    "postversion": "git push origin master && git push --tags"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "micro": "^7.3.3",
+    "superagent": "^3.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acusticdemon/proxy.rpc.git"
+  },
+  "keywords": [
+    "proxy",
+    "rpc",
+    "micro-service"
+  ],
+  "bugs": {
+    "url": "https://github.com/acusticdemon/proxy.rpc/issues"
+  },
+  "homepage": "https://github.com/acusticdemon/proxy.rpc#readme"
+}

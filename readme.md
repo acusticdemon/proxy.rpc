@@ -31,7 +31,7 @@ require('proxy.rpc').run(ctrl, {
 ## Connection at remote service
 
 ```
-const remoteService = require('proxy.rpc').at(process.env.REMOTE_SERVICE_URL);
+const remoteService = require('proxy.rpc').at(process.env.REMOTE_SERVICE_URL);  // REMOTE_SERVICE_URL should be represented as http[s]://[username:password@]host[:port]
 await remoteService.a();
 await remoteService.b.c();
 ``` 

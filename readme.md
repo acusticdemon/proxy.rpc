@@ -21,7 +21,11 @@ module.exports = {
 ```
 #index.js#
 const ctrl = require('./ctrl');
-require('proxy.rpc').run(ctrl, process.env.SERVICE_PORT);
+require('proxy.rpc').run(ctrl, {
+  username: process.env.SERVICE_USERNAME,   // optional
+  password: process.env.SERVICE_PASSWORD,   // optional
+  port: process.env.SERVICE_PORT            // optional, default 8080
+});
 ```
 
 ## Connection at remote service

@@ -14,8 +14,18 @@ module.exports = {
     return response.body;
   },
 
-  server: async (process, {port = 8080}) => {
+  server: async (process, {username, password, port = 8080}) => {
     let server = micro(async (req, res) => {
+      if (username && password) {
+        let authHeader = req.headers['authorization'];
+        let authData = authHeader.split(' ');
+        let decodedAuth = new Buffer(authData[1], 'base64').toString();
+        let credentials = decodedAuth.split(':');
+        if (credentials[0] !== username || credentials[1] !== password) {
+          send(res, 401, 'Authentication required');
+          return;
+        }
+      }
       let {ns, method, data} = await json(req, {limit: '50mb'});
       console.log(ns, method, data);
       try {

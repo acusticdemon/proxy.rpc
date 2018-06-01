@@ -46,7 +46,7 @@ module.exports = {
           try {
             return await http.client(addr, ns, method, args);
           } catch (e) {
-            throw e.response ? new Error(e.response.text) : e;
+            throw e.response ? new Error(e.response) : e;
           }
         }
       });

@@ -4,6 +4,23 @@ const request = require('superagent');
 const micro = require('micro');
 const {json, sendError, send} = micro;
 
+function getBasicAuthCredentials(req) {
+  let authHeader = req.headers['authorization'];
+  if (!authHeader) {
+    return null;
+  }
+  let authData = authHeader.split(' ');
+  if (authData.length !== 2 || authData[0].toLowerCase() !== 'basic') {
+    return null;
+  }
+  let decodedAuth = new Buffer(authData[1], 'base64').toString();
+  let credentials = decodedAuth.split(':');
+  if (credentials.length !== 2) {
+    return null;
+  }
+  return credentials;
+}
+
 module.exports = {
 
   client: async (target, ns, method, data) => {
@@ -17,11 +34,8 @@ module.exports = {
   server: async (process, {username, password, port = 8080}) => {
     let server = micro(async (req, res) => {
       if (username && password) {
-        let authHeader = req.headers['authorization'];
-        let authData = authHeader.split(' ');
-        let decodedAuth = new Buffer(authData[1], 'base64').toString();
-        let credentials = decodedAuth.split(':');
-        if (credentials[0] !== username || credentials[1] !== password) {
+        let credentials = getBasicAuthCredentials(req);
+        if (!credentials || credentials[0] !== username || credentials[1] !== password) {
           send(res, 401, 'Authentication required');
           return;
         }

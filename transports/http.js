@@ -6,8 +6,8 @@ const {json, sendError, send} = micro;
 
 module.exports = {
 
-  client: async (target, ns, method, data) => {
-    let response = await request.post(target).send({ns, method, data});
+  client: async (target, path, data) => {
+    let response = await request.post(target).send({path, data});
     if (typeof response.body.__result !== 'undefined') {
       return response.body.__result;
     }
@@ -26,10 +26,10 @@ module.exports = {
           return;
         }
       }
-      let {ns, method, data} = await json(req, {limit: '50mb'});
-      console.log(ns, method, data);
+      let {path, data} = await json(req, {limit: '50mb'});
+      console.log(path, data);
       try {
-        send(res, 200, await process(ns, method, data));
+        send(res, 200, await process(path, data));
       } catch (e) {
         let {message, code = 500} = e;
         console.error('rpc-service', e);

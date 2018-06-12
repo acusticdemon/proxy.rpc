@@ -15,7 +15,8 @@
     "lodash": "^4.17.10",
     "micro": "^7.3.3",
     "mocha": "^5.2.0",
-    "superagent": "^3.7.0"
+    "superagent": "^3.7.0",
+    "uuid": "^3.2.1"
   },
   "repository": {
     "type": "git",

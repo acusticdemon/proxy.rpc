@@ -6,6 +6,18 @@ module.exports = {
     if (typeof config === 'number' || typeof config === 'string') {
       config = {port: config};
     }
+    if (!config.ctx) {
+      config.ctx = {
+        ns: 'proxy.rpc',
+        attr: 'info'
+      }
+    }
+    if (!config.logger) {
+      config.logger = {
+        info: (...args) => console.log(...args),
+        error: (...args) => console.error(...args)
+      }
+    }
 
     return await http.server(async (path, data) => {
       let result;

@@ -3,6 +3,8 @@
 const request = require('superagent');
 const micro = require('micro');
 const {json, sendError, send} = micro;
+const cls = require('cls-hooked');
+const uuid = require('uuid');
 
 function getBasicAuthCredentials(req) {
   let authHeader = req.headers['authorization'];
@@ -31,26 +33,41 @@ module.exports = {
     return response.body;
   },
 
-  server: async (process, {username, password, port = 8080}) => {
+  server: async (process, {username, password, port = 8080, ctx, logger}) => {
+    cls.createNamespace(ctx.ns);
     let server = micro(async (req, res) => {
-      if (username && password) {
-        let credentials = getBasicAuthCredentials(req);
-        if (!credentials || credentials[0] !== username || credentials[1] !== password) {
-          send(res, 401, 'Authentication required');
-          return;
-        }
-      }
-      let {path, data} = await json(req, {limit: '50mb'});
-      console.log(path, data);
+      let requestNs = cls.getNamespace(ctx.ns);
+      let context = requestNs.createContext();
+      requestNs.enter(context);
+
       try {
-        send(res, 200, await process(path, data));
-      } catch (e) {
-        let {message, code = 500} = e;
-        console.error('rpc-service', e);
-        send(res, code, message);
+        if (username && password) {
+          let credentials = getBasicAuthCredentials(req);
+          if (!credentials || credentials[0] !== username || credentials[1] !== password) {
+            send(res, 401, 'Authentication required');
+            return;
+          }
+        }
+
+        let info = {
+          requestId: uuid.v4()
+        };
+        requestNs.set(ctx.attr, info);
+
+        let {path, data} = await json(req, {limit: '50mb'});
+        logger.info(path, data);
+        try {
+          send(res, 200, await process(path, data));
+        } catch (e) {
+          let {message, code = 500} = e;
+          logger.error('rpc-service', e);
+          send(res, code, message);
+        }
+      } finally {
+        requestNs.exit(context);
       }
     });
     await new Promise((resolve, reject) => server.listen(port, err => err ? reject(err) : resolve()));
-    console.log(`Service started at port ${port}...`);
+    logger.info(`Service started at port ${port}...`);
   }
 };

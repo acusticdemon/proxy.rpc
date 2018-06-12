@@ -1,15 +1,19 @@
 {
   "name": "proxy.rpc",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Proxy lib for connection at remote rpc service",
   "main": "index.js",
   "scripts": {
-    "postversion": "git push origin master && git push --tags"
+    "postversion": "git push origin master && git push --tags",
+    "test": "mocha test"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chai": "^4.1.2",
+    "lodash": "^4.17.10",
     "micro": "^7.3.3",
+    "mocha": "^5.2.0",
     "superagent": "^3.7.0"
   },
   "repository": {

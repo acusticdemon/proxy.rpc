@@ -49,7 +49,7 @@ module.exports = {
           try {
             return await http.client(addr, target.__path, args);
           } catch (e) {
-            throw e.response ? new Error(e.response) : e;
+            throw e.response ? new Error(JSON.stringify(e.response)) : e;
           }
         }
       });

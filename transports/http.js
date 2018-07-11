@@ -62,6 +62,7 @@ module.exports = {
           send(res, code, message);
         }
       } finally {
+        requestNs.set(ctx.attr, null);
         requestNs.exit(context);
       }
     });

@@ -49,21 +49,20 @@ module.exports = {
           }
         }
 
-        let info = {
-          requestId: uuid.v4()
-        };
-        requestNs.set(ctx.attr, info);
+        requestNs.set(ctx.attr, uuid.v4());
 
-        let {path, data} = await json(req, {limit: '50mb'});
-        logger.info(path, data);
+        let body = await json(req, {limit: '50mb'});
+        logger.info(JSON.stringify(body));
+        let {path, data} = body;
         try {
           send(res, 200, await process(path, data));
         } catch (e) {
+          logger.error(e);
           let {message, code = 500} = e;
-          logger.error('rpc-service', e);
           send(res, code, message);
         }
       } finally {
+        requestNs.set(ctx.attr, null);
         requestNs.exit(context);
       }
     });

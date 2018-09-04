@@ -32,11 +32,13 @@ module.exports = {
 ```
 #index.js#
 const ctrl = require('./ctrl');
-require('proxy.rpc').run(ctrl, {
+let serverPromise = require('proxy.rpc').run(ctrl, {
   username: process.env.SERVICE_USERNAME,   // optional
   password: process.env.SERVICE_PASSWORD,   // optional
   port: process.env.SERVICE_PORT            // optional, default 8080
 });
+//if need to stop
+serverPromise.then(s => s.close())
 ```
 
 ## Connection at remote service
@@ -65,7 +67,7 @@ _Response_
 ```
 ```
 _Request_
-{ path: 'b.c',
+{ path: 'b.c', // OR ['b', 'c']
   data: [ 1, 2 ] }
   
 _Response_

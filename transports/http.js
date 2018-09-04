@@ -2,7 +2,7 @@
 
 const request = require('superagent');
 const micro = require('micro');
-const {json, sendError, send} = micro;
+const {json, send} = micro;
 const cls = require('cls-hooked');
 const uuid = require('uuid');
 
@@ -68,5 +68,7 @@ module.exports = {
     });
     await new Promise((resolve, reject) => server.listen(port, err => err ? reject(err) : resolve()));
     logger.info(`Service started at port ${port}...`);
+
+    return server
   }
 };

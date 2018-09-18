@@ -1,4 +1,5 @@
 const http = require('./transports/http');
+const has = require('lodash/has');
 const invoke = require('lodash/invoke');
 
 module.exports = {
@@ -19,8 +20,14 @@ module.exports = {
       }
     }
 
-    return await http.server(async (path, data) => {
+    return http.server(async (path, data) => {
       let result;
+
+      if (!has(controller, path)) {
+        let e = new Error('Not Found');
+        e.status = e.code = 404;
+        throw e;
+      }
 
       result = await invoke(controller, path, ...data);
 
@@ -49,7 +56,14 @@ module.exports = {
           try {
             return await http.client(addr, target.__path, args);
           } catch (e) {
-            throw e.response ? new Error(JSON.stringify(e.response)) : e;
+            if (e.response) {
+              let err = new Error();
+              err.message = e.response.text;
+              err.code = e.response.status;
+              throw err;
+            }
+
+            throw e;
           }
         }
       });

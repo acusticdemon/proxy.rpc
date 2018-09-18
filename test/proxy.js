@@ -46,4 +46,13 @@ describe('proxy.rpc', async () => {
     let f = await this.client.d.e.f({x: 1, y: 2})
     f.should.be.equal(2)
   })
+
+  it('not allowed', async () => {
+    try {
+      await this.client.d.e.s()
+    } catch(e) {
+      console.log(e);
+      e.code.should.equal(404);
+    }
+  })
 })

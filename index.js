@@ -1,5 +1,5 @@
 const http = require('./transports/http');
-const has = require('lodash/has');
+const hasIn = require('lodash/hasIn');
 const invoke = require('lodash/invoke');
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
     return http.server(async (path, data) => {
       let result;
 
-      if (!has(controller, path)) {
+      if (!hasIn(controller, path)) {
         let e = new Error('Not Found');
         e.status = e.code = 404;
         throw e;

@@ -10,7 +10,7 @@ module.exports = {
     if (!config.ctx) {
       config.ctx = {
         ns: 'proxy.rpc',
-        attr: 'info'
+        sessionId: 'session-id'
       }
     }
     if (!config.logger) {
@@ -38,7 +38,7 @@ module.exports = {
     }, config);
   },
 
-  at(addr, {headers = {}, ctx ={}}) {
+  at(addr, options = {}) {
     return make_proxy();
 
     function make_proxy(obj = () => {
@@ -54,7 +54,7 @@ module.exports = {
 
         async apply(target, self, args) {
           try {
-            return await http.client(addr, target.__path, args, {headers, ctx});
+            return await http.client(addr, target.__path, args, options);
           } catch (e) {
             if (e.response) {
               let err = new Error();

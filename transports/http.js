@@ -26,15 +26,13 @@ function getBasicAuthCredentials(req) {
 
 module.exports = {
 
-  client: async (target, path, data, {headers = {}, ctx}) => {
+  client: async (target, path, data, {ctx}) => {
     let req = request.post(target);
 
     if (ctx) {
-      let sesId = _.invoke(cls.getNamespace(ctx.ns), 'get', ctx.attr);
-      if (sesId) req.set(SESSION_ID, sesId);
+      let sesId = _.invoke(cls.getNamespace(ctx.ns), 'get', ctx.sessionId);
+      req.set(SESSION_ID, sesId || uuid());
     }
-
-    _.forEach(headers, (v, k) => req.set(k, v()));
 
     let response = await req.send({path, data});
     if (typeof response.body.__result !== 'undefined') {
@@ -59,7 +57,7 @@ module.exports = {
           }
         }
 
-        requestNs.set(ctx.attr, req.headers[SESSION_ID] || uuid.v4());
+        requestNs.set(ctx.sessionId, req.headers[SESSION_ID] || uuid.v4());
 
         let body = await json(req, {limit: '50mb'});
         let {path, data} = body;
@@ -74,7 +72,7 @@ module.exports = {
           send(res, code, message);
         }
       } finally {
-        requestNs.set(ctx.attr, null);
+        requestNs.set(ctx.sessionId, null);
         requestNs.exit(context);
       }
     });

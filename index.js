@@ -38,7 +38,7 @@ module.exports = {
     }, config);
   },
 
-  at(addr) {
+  at(addr, {headers = {}, ctx ={}}) {
     return make_proxy();
 
     function make_proxy(obj = () => {
@@ -54,7 +54,7 @@ module.exports = {
 
         async apply(target, self, args) {
           try {
-            return await http.client(addr, target.__path, args);
+            return await http.client(addr, target.__path, args, {headers, ctx});
           } catch (e) {
             if (e.response) {
               let err = new Error();

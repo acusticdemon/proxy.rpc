@@ -1,10 +1,11 @@
-'use strict';
-
 const request = require('superagent');
 const micro = require('micro');
 const {json, send} = micro;
 const cls = require('cls-hooked');
 const uuid = require('uuid');
+const _ = require('lodash');
+
+const SESSION_ID = 'x-session-id';
 
 function getBasicAuthCredentials(req) {
   let authHeader = req.headers['authorization'];
@@ -25,8 +26,17 @@ function getBasicAuthCredentials(req) {
 
 module.exports = {
 
-  client: async (target, path, data) => {
-    let response = await request.post(target).send({path, data});
+  client: async (target, path, data, {headers = {}, ctx}) => {
+    let req = request.post(target);
+
+    if (ctx) {
+      let sesId = _.invoke(cls.getNamespace(ctx.ns), 'get', ctx.attr);
+      if (sesId) req.set(SESSION_ID, sesId);
+    }
+
+    _.forEach(headers, (v, k) => req.set(k, v()));
+
+    let response = await req.send({path, data});
     if (typeof response.body.__result !== 'undefined') {
       return response.body.__result;
     }
@@ -49,11 +59,13 @@ module.exports = {
           }
         }
 
-        requestNs.set(ctx.attr, uuid.v4());
+        requestNs.set(ctx.attr, req.headers[SESSION_ID] || uuid.v4());
 
         let body = await json(req, {limit: '50mb'});
-        logger.info(JSON.stringify(body));
         let {path, data} = body;
+
+        logger.info('proxy.rpc in', {path: Array.isArray(path) ? path.join('.') : path, data: JSON.stringify(data)});
+
         try {
           send(res, 200, await process(path, data));
         } catch (e) {

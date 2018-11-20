@@ -26,7 +26,7 @@ function getBasicAuthCredentials(req) {
 
 module.exports = {
 
-  client: async (target, path, data, {ctx}) => {
+  client: async (target, path, data, {ctx, logger}) => {
     let req = request.post(target);
 
     if (ctx) {
@@ -42,9 +42,8 @@ module.exports = {
   },
 
   server: async (process, {username, password, port = 8080, ctx, logger}) => {
-    cls.createNamespace(ctx.ns);
+    let requestNs = cls.createNamespace(ctx.ns);
     let server = micro(async (req, res) => {
-      let requestNs = cls.getNamespace(ctx.ns);
       let context = requestNs.createContext();
       requestNs.enter(context);
 
@@ -62,12 +61,11 @@ module.exports = {
         let body = await json(req, {limit: '50mb'});
         let {path, data} = body;
 
-        logger.info('proxy.rpc in', {path: Array.isArray(path) ? path.join('.') : path, data: JSON.stringify(data)});
+        logger.info('proxy.rpc.in', {path: Array.isArray(path) ? path.join('.') : path, data: JSON.stringify(data)});
 
         try {
           send(res, 200, await process(path, data));
         } catch (e) {
-          logger.error(e);
           let {message, code = 500} = e;
           send(res, code, message);
         }

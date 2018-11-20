@@ -51,7 +51,7 @@ describe('proxy.rpc', async () => {
     try {
       await this.client.d.e.s()
     } catch(e) {
-      console.log(e);
+      // console.log(e);
       e.code.should.equal(404);
     }
   })

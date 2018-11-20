@@ -29,16 +29,30 @@ module.exports = {
         throw e;
       }
 
-      result = await invoke(controller, path, ...data);
+      try {
+        result = await invoke(controller, path, ...data);
 
-      if (typeof result === 'undefined') result = {__result: 'ok'};
-      if (typeof result !== 'object' || result === null) result = {__result: result};
+        if (typeof result === 'undefined') result = {__result: 'ok'};
+        if (typeof result !== 'object' || result === null) result = {__result: result};
 
-      return result;
+        return result;
+      } catch (e) {
+        e.path = path;
+        e.data = JSON.stringify(data);
+        config.logger.error('>>>', e);
+        throw e;
+      }
     }, config);
   },
 
   at(addr, options = {}) {
+    if (!options.logger) {
+      options.logger = {
+        info: (...args) => console.log(...args),
+        error: (...args) => console.error(...args)
+      }
+    }
+
     return make_proxy();
 
     function make_proxy(obj = () => {
@@ -53,13 +67,22 @@ module.exports = {
         },
 
         async apply(target, self, args) {
+          let startTime = new Date();
+          let path = Array.isArray(target.__path) ? target.__path.join('.') : target.__path;
           try {
-            return await http.client(addr, target.__path, args, options);
+            let res = await http.client(addr, target.__path, args, options);
+            let ms = new Date() - startTime;
+            options.logger.info(`proxy.rpc.request`, {path, ms, data: JSON.stringify(args)});
+            return res;
           } catch (e) {
             if (e.response) {
               let err = new Error();
-              err.message = e.response.text;
+              err.path = path;
+              err.message = `proxy.rpc.error in path ${addr}:/${path} ${e.response.text}`;
               err.code = e.response.status;
+              err.data = JSON.stringify(args);
+              err.ms = new Date() - startTime;
+              options.logger.error(err);
               throw err;
             }
 

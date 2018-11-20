@@ -36,6 +36,8 @@ let serverPromise = require('proxy.rpc').run(ctrl, {
   username: process.env.SERVICE_USERNAME,   // optional
   password: process.env.SERVICE_PASSWORD,   // optional
   port: process.env.SERVICE_PORT            // optional, default 8080
+  logger: {info, error}                     // optional
+  ctx: <String>                             // optional for logger context
 });
 //if need to stop
 serverPromise.then(s => s.close())
@@ -49,7 +51,7 @@ http[s]://[username:password@]host[:port]
 ```
 
 ```
-const remoteService = require('proxy.rpc').at(REMOTE_SERVICE_URL);  
+const remoteService = require('proxy.rpc').at(REMOTE_SERVICE_URL, {logger, ctx});  
 await remoteService.a();
 await remoteService.b.c(1, 2);
 await remoteService.d.e.f({x:1, y:2});

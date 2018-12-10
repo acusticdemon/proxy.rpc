@@ -1,6 +1,6 @@
 {
   "name": "proxy.rpc",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Proxy lib for connection at remote rpc service",
   "main": "index.js",
   "scripts": {

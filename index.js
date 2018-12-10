@@ -39,7 +39,7 @@ module.exports = {
       } catch (e) {
         e.path = path;
         e.data = JSON.stringify(data);
-        config.logger.error('>>>', e);
+        config.logger.error(e);
         throw e;
       }
     }, config);

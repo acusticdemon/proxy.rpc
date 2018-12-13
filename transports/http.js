@@ -63,12 +63,10 @@ module.exports = {
 
         logger.info('proxy.rpc.in', {path: Array.isArray(path) ? path.join('.') : path, data: JSON.stringify(data)});
 
-        try {
-          send(res, 200, await process(path, data));
-        } catch (e) {
-          let {message, code = 500} = e;
-          send(res, code, message);
-        }
+        send(res, 200, await process(path, data));
+      } catch (e) {
+        let {message, code = 500} = e;
+        send(res, code, message);
       } finally {
         requestNs.set(ctx.sessionId, null);
         requestNs.exit(context);

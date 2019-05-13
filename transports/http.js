@@ -42,7 +42,10 @@ module.exports = {
   },
 
   server: async (process, {username, password, port = 8080, ctx, logger}) => {
-    let requestNs = cls.createNamespace(ctx.ns);
+    let requestNs = cls.getNamespace(ctx.ns);
+    if (!requestNs) {
+      requestNs = cls.createNamespace(ctx.ns);
+    }
     let server = micro(async (req, res) => {
       let context = requestNs.createContext();
       requestNs.enter(context);

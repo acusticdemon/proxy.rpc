@@ -1,8 +1,11 @@
 const http = require('./transports/http');
+const RpcError = require('./errors/RpcError');
 const hasIn = require('lodash/hasIn');
 const invoke = require('lodash/invoke');
 
 module.exports = {
+  RpcError,
+
   async run(controller, config) {
     if (typeof config === 'number' || typeof config === 'string') {
       config = {port: config};
@@ -76,10 +79,9 @@ module.exports = {
             return res;
           } catch (e) {
             if (e.response) {
-              let err = new Error();
+              let err = RpcError.fromHttpResponse(e.response);
+              err.message = `proxy.rpc.error in path ${addr}:/${path} ${err.message}`;
               err.path = path;
-              err.message = `proxy.rpc.error in path ${addr}:/${path} ${e.response.text}`;
-              err.code = e.response.status;
               err.data = JSON.stringify(args);
               err.ms = new Date() - startTime;
               options.logger.error(err);

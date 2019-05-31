@@ -4,6 +4,7 @@ const {json, send} = micro;
 const cls = require('cls-hooked');
 const uuid = require('uuid');
 const _ = require('lodash');
+const RpcError = require('../errors/RpcError');
 
 const SESSION_ID = 'x-session-id';
 
@@ -54,8 +55,7 @@ module.exports = {
         if (username && password) {
           let credentials = getBasicAuthCredentials(req);
           if (!credentials || credentials[0] !== username || credentials[1] !== password) {
-            send(res, 401, 'Authentication required');
-            return;
+            throw new RpcError(401, 'Authentication required');
           }
         }
 
@@ -68,8 +68,8 @@ module.exports = {
 
         send(res, 200, await process(path, data));
       } catch (e) {
-        let {message, code = 500} = e;
-        send(res, code, message);
+        let {message, details = {}, code = 500} = e;
+        send(res, code, JSON.stringify({message, details}));
       } finally {
         requestNs.set(ctx.sessionId, null);
         requestNs.exit(context);

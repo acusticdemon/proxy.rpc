@@ -1,58 +1,85 @@
-const ProxyRpc = require('../index');
+const _ = require('lodash');
+const path = require('path');
+const {expect} = require('chai');
 
-require('chai').should();
+const ProxyRpc = require('../index');
+const {forkAsync} = require('./helpers/child');
+
+const workerPath = path.resolve(__dirname, './servers/worker.js');
+
+// mute logs
+const logger = {
+  info: _.noop,
+  error: _.noop,
+};
+
+const WORKER_PORT = 9900;
 
 describe('proxy.rpc', async () => {
-
-  const port = 9900;
+  let worker, client;
 
   before(async () => {
-    let ctl = {
-      a() {
-
+    worker = await forkAsync(workerPath, {
+      stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+      env: {
+        PORT: WORKER_PORT,
       },
-      b: {
-        c(x, y) {
-          return x + y
-        }
-      },
-      d: {
-        e: {
-          f({x, y}) {
-            return x * y
-          }
-        }
-      }
-    };
-
-    ProxyRpc.run(ctl, {
-      port
     });
 
-    this.client = ProxyRpc.at(`localhost:${port}`);
+    client = ProxyRpc.at(`localhost:${WORKER_PORT}`, {
+      logger,
+    });
+  });
+
+  after(() => {
+    worker.kill();
   });
 
   it('direct fn', async () => {
-    let a = await this.client.a()
-    a.should.be.equal('ok')
-  })
+    const res = await client.noop();
+    expect(res).to.be.equal('ok');
+  });
 
   it('short path', async () => {
-    let c = await this.client.b.c(1, 2)
-    c.should.be.equal(3)
-  })
+    const sum = await client.add.arg(1, 2);
+    expect(sum).to.be.equal(3);
+  });
 
   it('long path', async () => {
-    let f = await this.client.d.e.f({x: 1, y: 2})
-    f.should.be.equal(2)
-  })
+    const sum = await client.add.obj({x: 1, y: 2})
+    expect(sum).to.be.equal(3);
+  });
 
-  it('not allowed', async () => {
+  it('not found', async () => {
     try {
-      await this.client.d.e.s()
-    } catch(e) {
-      // console.log(e);
-      e.code.should.equal(404);
+      await client.add.arr();
+    } catch (error) {
+      expect(error).to.include({
+        code: 404,
+        message: `proxy.rpc.error in path localhost:${WORKER_PORT}:/add.arr Not Found`,
+      });
     }
-  })
-})
+  });
+
+  it('internal error', async () => {
+    try {
+      await client.err.thr.base();
+    } catch (error) {
+      expect(error).to.include({
+        code: 500,
+        message: `proxy.rpc.error in path localhost:${WORKER_PORT}:/err.thr.base Simple error`,
+      });
+    }
+  });
+
+  it('http error', async () => {
+    try {
+      await client.err.thr.http();
+    } catch (error) {
+      expect(error).to.include({
+        code: 400,
+        message: `proxy.rpc.error in path localhost:${WORKER_PORT}:/err.thr.http Bad request`,
+      });
+    }
+  });
+});

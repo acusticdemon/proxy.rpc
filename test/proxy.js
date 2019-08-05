@@ -46,7 +46,7 @@ describe('proxy.rpc', async () => {
   });
 
   it('long path', async () => {
-    const sum = await client.add.obj({x: 1, y: 2})
+    const sum = await client.add.obj({x: 1, y: 2});
     expect(sum).to.be.equal(3);
   });
 
@@ -54,9 +54,14 @@ describe('proxy.rpc', async () => {
     try {
       await client.add.arr();
     } catch (error) {
-      expect(error).to.include({
-        code: 404,
-        message: `proxy.rpc.error in path localhost:${WORKER_PORT}:/add.arr Not Found`,
+      expect(error).to.deep.include({
+        status: 404,
+        name: 'RpcError',
+        message: 'Not Found',
+        code: 'proxy.rpc.error',
+        trace: [
+          `localhost:${WORKER_PORT}/add.arr`,
+        ],
       });
     }
   });
@@ -65,9 +70,14 @@ describe('proxy.rpc', async () => {
     try {
       await client.err.thr.base();
     } catch (error) {
-      expect(error).to.include({
-        code: 500,
-        message: `proxy.rpc.error in path localhost:${WORKER_PORT}:/err.thr.base Simple error`,
+      expect(error).to.deep.include({
+        status: 500,
+        name: 'RpcError',
+        message: 'Simple error',
+        code: 'proxy.rpc.error',
+        trace: [
+          `localhost:${WORKER_PORT}/err.thr.base`,
+        ],
       });
     }
   });
@@ -76,9 +86,14 @@ describe('proxy.rpc', async () => {
     try {
       await client.err.thr.http();
     } catch (error) {
-      expect(error).to.include({
-        code: 400,
-        message: `proxy.rpc.error in path localhost:${WORKER_PORT}:/err.thr.http Bad request`,
+      expect(error).to.deep.include({
+        status: 400,
+        name: 'RpcError',
+        message: 'Bad request',
+        code: 'proxy.rpc.error',
+        trace: [
+          `localhost:${WORKER_PORT}/err.thr.http`,
+        ],
       });
     }
   });

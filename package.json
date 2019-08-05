@@ -12,6 +12,7 @@
   "dependencies": {
     "chai": "^4.2.0",
     "cls-hooked": "^4.2.2",
+    "errors": "^0.3.0",
     "lodash": "^4.17.11",
     "micro": "^9.3.3",
     "mocha": "^5.2.0",

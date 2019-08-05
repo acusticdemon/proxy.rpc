@@ -1,9 +1,9 @@
 const _ = require('lodash');
 const path = require('path');
-const { expect } = require('chai');
+const {expect} = require('chai');
 
 const ProxyRpc = require('../index');
-const { forkAsync } = require('./helpers/child');
+const {forkAsync} = require('./helpers/child');
 
 const workerPath = path.resolve(__dirname, './servers/worker.js');
 const supervisorPath = path.resolve(__dirname, './servers/supervisor.js');
@@ -57,7 +57,7 @@ describe('proxy.rpc.chain', async () => {
   });
 
   it('long path', async () => {
-    const sum = await client.add.obj({ x: 1, y: 2 })
+    const sum = await client.add.obj({x: 1, y: 2});
     expect(sum).to.be.equal(3);
   });
 
@@ -65,9 +65,15 @@ describe('proxy.rpc.chain', async () => {
     try {
       await client.not.found();
     } catch (error) {
-      expect(error).to.include({
-        code: 404,
-        message: `proxy.rpc.error in path localhost:${SUPERVISOR_PORT}:/not.found proxy.rpc.error in path localhost:${WORKER_PORT}:/not.found Not Found`,
+      expect(error).to.deep.include({
+        status: 404,
+        name: 'RpcError',
+        message: 'Not Found',
+        code: 'proxy.rpc.error',
+        trace: [
+          `localhost:${SUPERVISOR_PORT}/not.found`,
+          `localhost:${WORKER_PORT}/not.found`,
+        ],
       });
     }
   });
@@ -76,9 +82,15 @@ describe('proxy.rpc.chain', async () => {
     try {
       await client.err.thr.base();
     } catch (error) {
-      expect(error).to.include({
-        code: 500,
-        message: `proxy.rpc.error in path localhost:${SUPERVISOR_PORT}:/err.thr.base proxy.rpc.error in path localhost:${WORKER_PORT}:/err.thr.base Simple error`,
+      expect(error).to.deep.include({
+        status: 500,
+        name: 'RpcError',
+        message: 'Simple error',
+        code: 'proxy.rpc.error',
+        trace: [
+          `localhost:${SUPERVISOR_PORT}/err.thr.base`,
+          `localhost:${WORKER_PORT}/err.thr.base`,
+        ],
       });
     }
   });
@@ -87,9 +99,15 @@ describe('proxy.rpc.chain', async () => {
     try {
       await client.err.thr.http();
     } catch (error) {
-      expect(error).to.include({
-        code: 400,
-        message: `proxy.rpc.error in path localhost:${SUPERVISOR_PORT}:/err.thr.http proxy.rpc.error in path localhost:${WORKER_PORT}:/err.thr.http Bad request`,
+      expect(error).to.deep.include({
+        status: 400,
+        name: 'RpcError',
+        message: 'Bad request',
+        code: 'proxy.rpc.error',
+        trace: [
+          `localhost:${SUPERVISOR_PORT}/err.thr.http`,
+          `localhost:${WORKER_PORT}/err.thr.http`,
+        ],
       });
     }
   });

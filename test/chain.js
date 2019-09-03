@@ -6,6 +6,7 @@ const ProxyRpc = require('../index');
 const {forkAsync} = require('./helpers/child');
 
 const workerPath = path.resolve(__dirname, './servers/worker.js');
+const supervisorPath = path.resolve(__dirname, './servers/supervisor.js');
 
 // mute logs
 const logger = {
@@ -14,25 +15,35 @@ const logger = {
 };
 
 const WORKER_PORT = 9900;
+const SUPERVISOR_PORT = 9901;
 
-describe('proxy.rpc', async () => {
-  let worker, client;
+describe('proxy.rpc.chain', async () => {
+  let worker, supervisor, client;
 
   before(async () => {
-    worker = await forkAsync(workerPath, {
-      stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
-      env: {
-        PORT: WORKER_PORT,
-      },
-    });
+    [worker, supervisor] = await Promise.all([
+      forkAsync(workerPath, {
+        stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+        env: {
+          PORT: WORKER_PORT,
+        }
+      }),
+      forkAsync(supervisorPath, {
+        stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+        env: {
+          PORT: SUPERVISOR_PORT,
+        },
+      }),
+    ]);
 
-    client = ProxyRpc.at(`localhost:${WORKER_PORT}`, {
+    client = ProxyRpc.at(`localhost:${SUPERVISOR_PORT}`, {
       logger,
     });
   });
 
   after(() => {
     worker.kill();
+    supervisor.kill();
   });
 
   it('direct fn', async () => {
@@ -52,7 +63,7 @@ describe('proxy.rpc', async () => {
 
   it('not found', async () => {
     try {
-      await client.add.arr();
+      await client.not.found();
     } catch (error) {
       expect(error).to.deep.include({
         status: 404,
@@ -60,7 +71,8 @@ describe('proxy.rpc', async () => {
         message: 'Not Found',
         code: 'proxy.rpc.error',
         trace: [
-          `localhost:${WORKER_PORT}/add.arr`,
+          `localhost:${SUPERVISOR_PORT}/not.found`,
+          `localhost:${WORKER_PORT}/not.found`,
         ],
       });
     }
@@ -76,6 +88,7 @@ describe('proxy.rpc', async () => {
         message: 'Simple error',
         code: 'proxy.rpc.error',
         trace: [
+          `localhost:${SUPERVISOR_PORT}/err.thr.base`,
           `localhost:${WORKER_PORT}/err.thr.base`,
         ],
       });
@@ -92,6 +105,7 @@ describe('proxy.rpc', async () => {
         message: 'Bad request',
         code: 'proxy.rpc.error',
         trace: [
+          `localhost:${SUPERVISOR_PORT}/err.thr.http`,
           `localhost:${WORKER_PORT}/err.thr.http`,
         ],
       });

@@ -1,7 +1,8 @@
+const _ = require('lodash');
+
+const {RpcError} = require('./errors');
 const http = require('./transports/http');
-const RpcError = require('./errors/RpcError');
-const hasIn = require('lodash/hasIn');
-const invoke = require('lodash/invoke');
+const {fastJSONParse} = require('./helpers/json');
 
 module.exports = {
   RpcError,
@@ -10,30 +11,32 @@ module.exports = {
     if (typeof config === 'number' || typeof config === 'string') {
       config = {port: config};
     }
+
     if (!config.ctx) {
       config.ctx = {
         ns: 'proxy.rpc',
         sessionId: 'session-id'
-      }
+      };
     }
+
     if (!config.logger) {
       config.logger = {
         info: (...args) => console.log(...args),
         error: (...args) => console.error(...args)
-      }
+      };
     }
 
     return http.server(async (path, data) => {
       let result;
 
-      if (!hasIn(controller, path)) {
+      if (!_.hasIn(controller, path)) {
         let e = new Error('Not Found');
         e.status = e.code = 404;
         throw e;
       }
 
       try {
-        result = await invoke(controller, path, ...data);
+        result = await _.invoke(controller, path, ...data);
 
         if (typeof result === 'undefined') result = {__result: 'ok'};
         if (typeof result !== 'object' || result === null) result = {__result: result};
@@ -53,7 +56,7 @@ module.exports = {
       options.logger = {
         info: (...args) => console.log(...args),
         error: (...args) => console.error(...args)
-      }
+      };
     }
 
     return make_proxy();
@@ -77,18 +80,34 @@ module.exports = {
             let ms = new Date() - startTime;
             options.logger.info(`proxy.rpc.request`, {path, ms, data: JSON.stringify(args)});
             return res;
-          } catch (e) {
-            if (e.response) {
-              let err = RpcError.fromHttpResponse(e.response);
-              err.message = `proxy.rpc.error in path ${addr}:/${path} ${err.message}`;
-              err.path = path;
-              err.data = JSON.stringify(args);
-              err.ms = new Date() - startTime;
-              options.logger.error(err);
+          } catch (err) {
+            const {response} = err;
+
+            if (!response) {
               throw err;
             }
 
-            throw e;
+            const {status, text} = response;
+            const {message, details, trace = []} = fastJSONParse(text, {
+              message: text,
+              details: {},
+            });
+
+            const error = new RpcError({
+              ms: new Date() - startTime,
+              data: JSON.stringify(args),
+              trace: [
+                `${addr}/${path}`,
+                ...trace,
+              ],
+              details,
+              message,
+              status,
+            });
+
+            options.logger.error(error.toJSON());
+
+            throw error;
           }
         }
       });

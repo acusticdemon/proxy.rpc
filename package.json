@@ -13,11 +13,11 @@
     "chai": "^4.2.0",
     "cls-hooked": "^4.2.2",
     "errors": "^0.3.0",
-    "lodash": "^4.17.11",
-    "micro": "^9.3.3",
+    "lodash": "^4.17.15",
+    "micro": "^9.3.4",
     "mocha": "^5.2.0",
-    "superagent": "^4.0.0",
-    "uuid": "^3.3.2"
+    "superagent": "^5.0.0",
+    "uuid": "^3.3.3"
   },
   "repository": {
     "type": "git",

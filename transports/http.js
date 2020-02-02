@@ -1,29 +1,30 @@
-const request = require('superagent');
-const micro = require('micro');
-const {json, send} = micro;
-const cls = require('cls-hooked');
-const uuid = require('uuid');
-const _ = require('lodash');
+const request = require("superagent");
+const micro = require("micro");
+const { json, send } = micro;
+const cls = require("cls-hooked");
+const uuid = require("uuid");
+const _ = require("lodash");
 
-const {RpcError} = require('../errors');
+const { RpcError } = require("../errors");
 
-const SESSION_ID = 'x-session-id';
+const ACCOUNT_ID_HEADER = "x-account-id";
+const SESSION_ID_HEADER = "x-session-id";
 
 function getBasicAuthCredentials(req) {
-  let authHeader = req.headers['authorization'];
+  let authHeader = req.headers["authorization"];
 
   if (!authHeader) {
     return null;
   }
 
-  let authData = authHeader.split(' ');
+  let authData = authHeader.split(" ");
 
-  if (authData.length !== 2 || authData[0].toLowerCase() !== 'basic') {
+  if (authData.length !== 2 || authData[0].toLowerCase() !== "basic") {
     return null;
   }
 
-  let decodedAuth = new Buffer(authData[1], 'base64').toString();
-  let credentials = decodedAuth.split(':');
+  let decodedAuth = new Buffer(authData[1], "base64").toString();
+  let credentials = decodedAuth.split(":");
 
   if (credentials.length !== 2) {
     return null;
@@ -33,25 +34,28 @@ function getBasicAuthCredentials(req) {
 }
 
 module.exports = {
-
-  client: async (target, path, data, {ctx, logger}) => {
+  client: async (target, path, data, { ctx, logger }) => {
     let req = request.post(target);
 
     if (ctx) {
-      let sesId = _.invoke(cls.getNamespace(ctx.ns), 'get', ctx.sessionId);
-      req.set(SESSION_ID, sesId || uuid());
+      const ns = cls.getNamespace(ctx.ns);
+      const accountId = _.invoke(ns, "get", ctx.accountId);
+      const sessionId = _.invoke(ns, "get", ctx.sessionId);
+
+      if (accountId) {
+        req.set(ACCOUNT_ID_HEADER, accountId);
+      }
+
+      req.set(SESSION_ID_HEADER, sessionId || uuid());
     }
 
-    let response = await req.send({path, data});
+    const { body } = await req.send({ path, data });
+    const response = _.get(body, "__result", body);
 
-    if (typeof response.body.__result !== 'undefined') {
-      return response.body.__result;
-    }
-
-    return response.body;
+    return response;
   },
 
-  server: async (process, {username, password, port = 8080, ctx, logger}) => {
+  server: async (handler, { username, password, port = 8080, ctx, logger }) => {
     let requestNs = cls.getNamespace(ctx.ns);
 
     if (!requestNs) {
@@ -66,37 +70,53 @@ module.exports = {
         if (username && password) {
           let credentials = getBasicAuthCredentials(req);
 
-          if (!credentials || credentials[0] !== username || credentials[1] !== password) {
+          if (
+            !credentials ||
+            credentials[0] !== username ||
+            credentials[1] !== password
+          ) {
             throw new RpcError({
-              message: 'Authentication required',
-              status: 401,
+              message: "Authentication required",
+              status: 401
             });
           }
         }
 
-        requestNs.set(ctx.sessionId, req.headers[SESSION_ID] || uuid.v4());
+        const {
+          [ACCOUNT_ID_HEADER]: accountId,
+          [SESSION_ID_HEADER]: sessionId
+        } = req.headers;
 
-        let body = await json(req, {limit: '50mb'});
-        let {path, data} = body;
+        requestNs.set(ctx.accountId, accountId);
+        requestNs.set(ctx.sessionId, sessionId || uuid.v4());
 
-        logger.info('proxy.rpc.in', {path: Array.isArray(path) ? path.join('.') : path, data: JSON.stringify(data)});
+        let body = await json(req, { limit: "50mb" });
+        let { path, data } = body;
 
-        send(res, 200, await process(path, data));
+        logger.info("proxy.rpc.in", {
+          path: Array.isArray(path) ? path.join(".") : path,
+          data: JSON.stringify(data)
+        });
+
+        send(res, 200, await handler(path, data));
       } catch (err) {
-        let {message, details = {}, code = 500, trace} = err;
+        let { message, details = {}, code = 500, trace } = err;
 
         if (err.status) {
           code = err.status;
         }
 
-        send(res, code, JSON.stringify({message, details, trace}));
+        send(res, code, JSON.stringify({ message, details, trace }));
       } finally {
         requestNs.set(ctx.sessionId, null);
+        requestNs.set(ctx.accountId, null);
         requestNs.exit(context);
       }
     });
 
-    await new Promise((resolve, reject) => server.listen(port, err => err ? reject(err) : resolve()));
+    await new Promise((resolve, reject) =>
+      server.listen(port, err => (err ? reject(err) : resolve()))
+    );
 
     logger.info(`Service started at port ${port}...`);
 

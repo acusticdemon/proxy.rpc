@@ -32,6 +32,6 @@
   "homepage": "https://github.com/acusticdemon/proxy.rpc#readme",
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^5.2.0"
+    "mocha": "^8.2.1"
   }
 }

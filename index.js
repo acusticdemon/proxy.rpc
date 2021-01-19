@@ -5,6 +5,8 @@ const {RpcError} = require('./errors');
 const http = require('./transports/http');
 const {fastJSONParse} = require('./helpers/json');
 
+const METRICS_PATH = 'metrics.get';
+
 module.exports = {
   RpcError,
 
@@ -34,13 +36,16 @@ module.exports = {
         name: "rpc_requests_ms",
         help: "RPC requests (ms)",
         labelNames: ["path", "status"],
+        buckets: [10, 50, 150, 500, 1000, 5000],
         registers: [config.prometheus.register]
       });
     }
 
     return http.server(async (path, data) => {
       let result;
-      let start = Date.now();
+
+      const start = Date.now();
+      const pathString = path.join('.');
 
       if (!_.hasIn(controller, path)) {
         let e = new Error('Not Found');
@@ -49,7 +54,7 @@ module.exports = {
 
         if (rpcRequestsHistogram) {
           rpcRequestsHistogram
-            .labels(path.join('.'), e.status)
+            .labels(pathString, e.status)
             .observe(Date.now() - start);
         }
 
@@ -62,9 +67,9 @@ module.exports = {
         if (typeof result === 'undefined') result = {__result: 'ok'};
         if (typeof result !== 'object' || result === null) result = {__result: result};
 
-        if (rpcRequestsHistogram) {
+        if (rpcRequestsHistogram && pathString !== METRICS_PATH) {
           rpcRequestsHistogram
-            .labels(path.join('.'), 200)
+            .labels(pathString, 200)
             .observe(Date.now() - start);
         }
 
@@ -75,9 +80,9 @@ module.exports = {
 
         config.logger.error(e);
 
-        if (rpcRequestsHistogram) {
+        if (rpcRequestsHistogram && pathString !== METRICS_PATH) {
           rpcRequestsHistogram
-            .labels(path.join('.'), e.code || e.status || 500)
+            .labels(pathString, e.code || e.status || 500)
             .observe(Date.now() - start);
         }
 

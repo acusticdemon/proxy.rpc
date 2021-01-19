@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const {Histogram} = require('prom-client');
 
 const {RpcError} = require('./errors');
 const http = require('./transports/http');
@@ -26,12 +27,32 @@ module.exports = {
       };
     }
 
+    let rpcRequestsHistogram;
+
+    if (config.prometheus && config.prometheus.register) {
+      rpcRequestsHistogram = new Histogram({
+        name: "rpc_requests_ms",
+        help: "RPC requests (ms)",
+        labelNames: ["path", "status"],
+        registers: [config.prometheus.register]
+      });
+    }
+
     return http.server(async (path, data) => {
       let result;
+      let start = Date.now();
 
       if (!_.hasIn(controller, path)) {
         let e = new Error('Not Found');
+
         e.status = e.code = 404;
+
+        if (rpcRequestsHistogram) {
+          rpcRequestsHistogram
+            .labels(path.join('.'), e.status)
+            .observe(Date.now() - start);
+        }
+
         throw e;
       }
 
@@ -41,11 +62,25 @@ module.exports = {
         if (typeof result === 'undefined') result = {__result: 'ok'};
         if (typeof result !== 'object' || result === null) result = {__result: result};
 
+        if (rpcRequestsHistogram) {
+          rpcRequestsHistogram
+            .labels(path.join('.'), 200)
+            .observe(Date.now() - start);
+        }
+
         return result;
       } catch (e) {
         e.path = path;
         e.data = JSON.stringify(data);
+
         config.logger.error(e);
+
+        if (rpcRequestsHistogram) {
+          rpcRequestsHistogram
+            .labels(path.join('.'), e.code || e.status || 500)
+            .observe(Date.now() - start);
+        }
+
         throw e;
       }
     }, config);

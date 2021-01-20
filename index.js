@@ -11,6 +11,9 @@ module.exports = {
   RpcError,
 
   async run(controller, config) {
+    controller = _.clone(controller);
+    config = _.clone(config);
+
     if (typeof config === 'number' || typeof config === 'string') {
       config = {port: config};
     }
@@ -39,11 +42,13 @@ module.exports = {
         buckets: [10, 50, 150, 500, 1000, 5000],
         registers: [config.prometheus.register]
       });
+
+      _.set(controller, METRICS_PATH, async () => {
+        return await config.prometheus.register.metrics();
+      });
     }
 
     return http.server(async (path, data) => {
-      let result;
-
       const start = Date.now();
       const pathString = path.join('.');
 
@@ -52,7 +57,7 @@ module.exports = {
 
         e.status = e.code = 404;
 
-        if (rpcRequestsHistogram) {
+        if (rpcRequestsHistogram && pathString !== METRICS_PATH) {
           rpcRequestsHistogram
             .labels(pathString, e.status)
             .observe(Date.now() - start);
@@ -62,12 +67,14 @@ module.exports = {
       }
 
       try {
-        result = await _.invoke(controller, path, ...data);
+        let result = await _.invoke(controller, path, ...data);
+
+        if (pathString === METRICS_PATH) return result;
 
         if (typeof result === 'undefined') result = {__result: 'ok'};
         if (typeof result !== 'object' || result === null) result = {__result: result};
 
-        if (rpcRequestsHistogram && pathString !== METRICS_PATH) {
+        if (rpcRequestsHistogram) {
           rpcRequestsHistogram
             .labels(pathString, 200)
             .observe(Date.now() - start);

@@ -51,7 +51,7 @@ module.exports = {
     return response.body;
   },
 
-  server: async (process, {username, password, port = 8080, ctx, logger}) => {
+  server: async (process, {username, password, port = 8080, ctx, logger, endpoints = {}}) => {
     let requestNs = cls.getNamespace(ctx.ns);
 
     if (!requestNs) {
@@ -76,10 +76,19 @@ module.exports = {
 
         requestNs.set(ctx.sessionId, req.headers[SESSION_ID] || uuid.v4());
 
-        let body = await json(req, {limit: '50mb'});
-        let {path, data} = body;
+        const fn = endpoints[req.url];
 
-        logger.info('proxy.rpc.in', {path: Array.isArray(path) ? path.join('.') : path, data: JSON.stringify(data)});
+        if (fn) {
+          return send(res, 200, await fn());
+        }
+
+        const body = await json(req, {limit: '50mb'});
+        const {path, data} = body;
+
+        logger.info('proxy.rpc.in', {
+          path: Array.isArray(path) ? path.join('.') : path,
+          data: JSON.stringify(data)
+        });
 
         send(res, 200, await process(path, data));
       } catch (err) {

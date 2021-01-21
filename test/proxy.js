@@ -1,8 +1,9 @@
 const _ = require('lodash');
 const path = require('path');
+const axios = require('axios');
 const {expect} = require('chai');
 
-const ProxyRpc = require('../index');
+const ProxyRpc = require('..');
 const {forkAsync} = require('./helpers/child');
 
 const workerPath = path.resolve(__dirname, './servers/worker.js');
@@ -38,6 +39,13 @@ describe('proxy.rpc', async () => {
   it('direct fn', async () => {
     const res = await client.noop();
     expect(res).to.be.equal('ok');
+  });
+
+  it('endpoint', async () => {
+    const {status, data} = await axios.get(`http://localhost:${WORKER_PORT}/foo`);
+
+    expect(status).to.be.equal(200);
+    expect(data).to.be.equal('bar');
   });
 
   it('short path', async () => {

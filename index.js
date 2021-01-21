@@ -36,16 +36,18 @@ module.exports = {
 
     if (config.prometheus && config.prometheus.register) {
       rpcRequestsHistogram = new Histogram({
-        name: "rpc_requests_ms",
-        help: "RPC requests (ms)",
-        labelNames: ["path", "status"],
+        name: 'rpc_requests_ms',
+        help: 'RPC requests (ms)',
+        labelNames: ['path', 'status'],
         buckets: [10, 50, 150, 500, 1000, 5000],
         registers: [config.prometheus.register]
       });
 
-      _.set(controller, METRICS_PATH, async () => {
-        return await config.prometheus.register.metrics();
-      });
+      if (!_.has(config, ['endpoints', '/metrics'])) {
+        _.set(config, ['endpoints', '/metrics'], async () => {
+          return await config.prometheus.register.metrics();
+        });
+      }
     }
 
     return http.server(async (path, data) => {

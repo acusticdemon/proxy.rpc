@@ -5,8 +5,6 @@ const {RpcError} = require('./errors');
 const http = require('./transports/http');
 const {fastJSONParse} = require('./helpers/json');
 
-const METRICS_PATH = 'metrics.get';
-
 module.exports = {
   RpcError,
 
@@ -59,7 +57,7 @@ module.exports = {
 
         e.status = e.code = 404;
 
-        if (rpcRequestsHistogram && pathString !== METRICS_PATH) {
+        if (rpcRequestsHistogram) {
           rpcRequestsHistogram
             .labels(pathString, e.status)
             .observe(Date.now() - start);
@@ -70,8 +68,6 @@ module.exports = {
 
       try {
         let result = await _.invoke(controller, path, ...data);
-
-        if (pathString === METRICS_PATH) return result;
 
         if (typeof result === 'undefined') result = {__result: 'ok'};
         if (typeof result !== 'object' || result === null) result = {__result: result};
@@ -89,7 +85,7 @@ module.exports = {
 
         config.logger.error(e);
 
-        if (rpcRequestsHistogram && pathString !== METRICS_PATH) {
+        if (rpcRequestsHistogram) {
           rpcRequestsHistogram
             .labels(pathString, e.code || e.status || 500)
             .observe(Date.now() - start);

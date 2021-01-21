@@ -79,7 +79,14 @@ module.exports = {
         const fn = endpoints[req.url];
 
         if (fn) {
-          return send(res, 200, await fn());
+          logger.info('proxy.rpc.in', {
+            method: req.method,
+            url: req.url
+          });
+
+          await fn(req, res);
+
+          return;
         }
 
         const body = await json(req, {limit: '50mb'});

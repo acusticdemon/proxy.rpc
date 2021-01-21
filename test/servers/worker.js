@@ -17,6 +17,8 @@ _.set(controller, 'err.thr.http', () => { throw new errors.Http400Error('Bad req
 runAsync(controller, {
   port,
   endpoints: {
-    '/foo': () => 'bar'
+    '/foo': (req, res) => {
+      res.end('bar');
+    }
   }
 });

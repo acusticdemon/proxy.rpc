@@ -84,7 +84,16 @@ module.exports = {
             url: req.url
           });
 
-          await fn(req, res);
+          try {
+            await fn(req, res);
+          } catch (e) {
+            e.method = req.method;
+            e.url = req.url;
+
+            logger.error(e);
+
+            throw e;
+          }
 
           return;
         }

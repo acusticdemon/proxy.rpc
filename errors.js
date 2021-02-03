@@ -1,13 +1,17 @@
-const errors = require('errors');
+class RpcError extends Error {
+  constructor({ message = 'RpcError', ...options }) {
+    super(message);
 
-// disable stacktraces for errors
-errors.stacks(false);
+    this.name = 'RpcError';
+    this.code = 'proxy.rpc.error';
 
-// define exported RpcError constructor
-const RpcError = errors.create({
-  code: 'proxy.rpc.error',
-  name: 'RpcError',
-});
+    this.ms = options.ms;
+    this.data = options.data;
+    this.trace = options.trace;
+    this.details = options.details;
+    this.status = options.status;
+  }
+}
 
 module.exports = {
   RpcError,

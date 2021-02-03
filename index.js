@@ -155,7 +155,7 @@ module.exports = {
               status,
             });
 
-            options.logger.error(error.toJSON());
+            options.logger.error(error);
 
             throw error;
           }

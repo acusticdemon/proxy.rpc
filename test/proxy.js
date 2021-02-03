@@ -62,6 +62,10 @@ describe('proxy.rpc', async () => {
     try {
       await client.add.arr();
     } catch (error) {
+      const {writable} = Object.getOwnPropertyDescriptor(error, 'message');
+
+      expect(writable).to.be.equal(true);
+
       expect(error).to.deep.include({
         status: 404,
         name: 'RpcError',
@@ -78,6 +82,10 @@ describe('proxy.rpc', async () => {
     try {
       await client.err.thr.base();
     } catch (error) {
+      const {writable} = Object.getOwnPropertyDescriptor(error, 'message');
+
+      expect(writable).to.be.equal(true);
+
       expect(error).to.deep.include({
         status: 500,
         name: 'RpcError',
@@ -94,6 +102,10 @@ describe('proxy.rpc', async () => {
     try {
       await client.err.thr.http();
     } catch (error) {
+      const {writable} = Object.getOwnPropertyDescriptor(error, 'message');
+
+      expect(writable).to.be.equal(true);
+
       expect(error).to.deep.include({
         status: 400,
         name: 'RpcError',
@@ -105,4 +117,24 @@ describe('proxy.rpc', async () => {
       });
     }
   });
+
+  it('not found error', async () => {
+    try {
+      await client.err.thr.notFound();
+    } catch (error) {
+      const {writable} = Object.getOwnPropertyDescriptor(error, 'message');
+
+      expect(writable).to.be.equal(true);
+
+      expect(error).to.deep.include({
+        status: 404,
+        name: 'RpcError',
+        message: 'Not Found',
+        code: 'proxy.rpc.error',
+        trace: [
+          `localhost:${WORKER_PORT}/err.thr.notFound`,
+        ],
+      });
+    }
+  })
 });

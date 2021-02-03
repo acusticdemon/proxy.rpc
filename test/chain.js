@@ -65,6 +65,10 @@ describe('proxy.rpc.chain', async () => {
     try {
       await client.not.found();
     } catch (error) {
+      const {writable} = Object.getOwnPropertyDescriptor(error, 'message');
+
+      expect(writable).to.be.equal(true);
+
       expect(error).to.deep.include({
         status: 404,
         name: 'RpcError',
@@ -82,6 +86,10 @@ describe('proxy.rpc.chain', async () => {
     try {
       await client.err.thr.base();
     } catch (error) {
+      const {writable} = Object.getOwnPropertyDescriptor(error, 'message');
+
+      expect(writable).to.be.equal(true);
+
       expect(error).to.deep.include({
         status: 500,
         name: 'RpcError',
@@ -99,6 +107,10 @@ describe('proxy.rpc.chain', async () => {
     try {
       await client.err.thr.http();
     } catch (error) {
+      const {writable} = Object.getOwnPropertyDescriptor(error, 'message');
+
+      expect(writable).to.be.equal(true);
+
       expect(error).to.deep.include({
         status: 400,
         name: 'RpcError',

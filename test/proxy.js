@@ -48,6 +48,13 @@ describe('proxy.rpc', async () => {
     expect(data).to.be.equal('bar');
   });
 
+  it('healthz', async () => {
+    const {status, data} = await axios.get(`http://localhost:${WORKER_PORT}/healthz`);
+
+    expect(status).to.be.equal(200);
+    expect(data).to.be.equal('ok');
+  });
+
   it('short path', async () => {
     const sum = await client.add.arg(1, 2);
     expect(sum).to.be.equal(3);

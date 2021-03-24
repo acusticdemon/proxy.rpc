@@ -53,6 +53,10 @@ module.exports = {
       }
     }
 
+    _.set(config, ['endpoints', '/healthz'], (req, res) => {
+      res.end('ok');
+    });
+
     return http.server(async (path, data) => {
       const start = Date.now();
       const pathString = path.join('.');

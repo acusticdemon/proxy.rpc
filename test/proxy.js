@@ -143,5 +143,25 @@ describe('proxy.rpc', async () => {
         ],
       });
     }
-  })
+  });
+
+  it('native error', async () => {
+    try {
+      await ProxyRpc.at('localhost:9999', {logger}).foo.bar(1);
+    } catch (error) {
+      const {writable} = Object.getOwnPropertyDescriptor(error, 'message');
+
+      expect(writable).to.be.equal(true);
+
+      expect(error).to.deep.include({
+        name: 'RpcError',
+        message: 'connect ECONNREFUSED 127.0.0.1:9999',
+        code: 'proxy.rpc.error',
+        data: "[1]",
+        trace: [
+          'localhost:9999/foo.bar'
+        ],
+      });
+    }
+  });
 });

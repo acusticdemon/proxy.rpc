@@ -137,27 +137,29 @@ module.exports = {
           } catch (err) {
             const {response} = err;
 
-            if (!response) {
-              throw err;
-            }
-
-            const {status, text} = response;
-            const {message, details, trace = []} = fastJSONParse(text, {
-              message: text,
-              details: {},
-            });
-
             const error = new RpcError({
               ms: new Date() - startTime,
               data: JSON.stringify(args),
-              trace: [
-                `${addr}/${path}`,
-                ...trace,
-              ],
-              details,
-              message,
-              status,
+              trace: [`${addr}/${path}`],
+              message: err.message
             });
+
+            if (response) {
+              const {status, text} = response;
+
+              const {message, details, trace = []} = fastJSONParse(text, {
+                message: text,
+                details: {},
+              });
+
+              Object.assign(error, {
+                details,
+                message,
+                status
+              });
+
+              error.trace.push(...trace);
+            }
 
             options.logger.error(error);
 

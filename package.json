@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "postversion": "git push origin master && git push --tags",
-    "test": "mocha test"
+    "test": "mocha test --exit --timeout 5000"
   },
   "author": "",
   "license": "ISC",

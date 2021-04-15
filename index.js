@@ -9,7 +9,6 @@ module.exports = {
   RpcError,
 
   async run(controller, config) {
-    controller = _.clone(controller);
     config = _.clone(config);
 
     if (typeof config === 'number' || typeof config === 'string') {

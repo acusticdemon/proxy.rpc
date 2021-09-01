@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const sha1 = require('sha1');
 const dotenv = require('dotenv');
-const info = require('../package.json');
+const info = require(path.resolve(process.cwd(), 'package.json'));
 
 const {NODE_ENV} = process.env;
 

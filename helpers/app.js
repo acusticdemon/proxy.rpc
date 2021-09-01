@@ -46,7 +46,7 @@ const getAppVersionAt = () => {
 
   if (!matches) return null;
 
-  return new Date(+matches[1], +matches[2] - 1, +matches[3], +matches[4], +matches[5], +matches[6])
+  return new Date(+matches[1], +matches[2] - 1, +matches[3], +matches[4], +matches[5], +matches[6]);
 };
 
 module.exports = {

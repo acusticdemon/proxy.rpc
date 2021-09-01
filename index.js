@@ -55,7 +55,7 @@ module.exports = {
     _.set(config, ['endpoints', '/isalive'], (req, res) => {
       res.end(JSON.stringify({
         IsAlive: true,
-        FrameworkVersion: process.version,
+        FrameworkVersion: process.version.substr(1),
         AppVersion: app.version,
         AppCompilationDate: app.versionAt,
         EnvInfo: '',

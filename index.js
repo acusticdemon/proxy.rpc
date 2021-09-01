@@ -1,9 +1,9 @@
 const _ = require('lodash');
 const {Histogram} = require('prom-client');
-
 const {RpcError} = require('./errors');
-const http = require('./transports/http');
 const {fastJSONParse} = require('./helpers/json');
+const {getAppVersion, getAppDeps, getAppVariables, getAppVersionAt} = require('./helpers/app');
+const http = require('./transports/http');
 
 module.exports = {
   RpcError,
@@ -51,6 +51,23 @@ module.exports = {
         });
       }
     }
+
+    _.set(config, ['endpoints', '/whoami'], (req, res) => {
+      res.end(JSON.stringify({
+        IsAlive: true,
+        FrameworkVersion: process.version,
+        AppVersion: getAppVersion(),
+        AppCompilationDate: getAppVersionAt(),
+        EnvInfo: '',
+        EnvVariablesSha1: getAppVariables(),
+      }));
+    });
+
+    _.set(config, ['endpoints', '/deps'], (req, res) => {
+      res.end(JSON.stringify({
+        DependenciesMap: getAppDeps(),
+      }));
+    });
 
     _.set(config, ['endpoints', '/healthz'], (req, res) => {
       res.end('ok');

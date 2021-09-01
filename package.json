@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "cls-hooked": "^4.2.2",
+    "dotenv": "^10.0.0",
     "lodash": "^4.17.15",
     "micro": "^9.3.4",
     "prom-client": "^13.0.0",

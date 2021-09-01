@@ -1,30 +1,13 @@
+const fs = require('fs');
+const path = require('path');
 const sha1 = require('sha1');
+const dotenv = require('dotenv');
 const info = require('../package.json');
 
-const SYSTEM_KEYS = [
-  'HOME',
-  'LANG',
-  'LC_CTYPE',
-  'LC_TERMINAL',
-  'LC_TERMINAL_VERSION',
-  'LOGNAME',
-  'LS_COLORS',
-  'MAIL',
-  'NODE_ENV',
-  'OLDPWD',
-  'PATH',
-  'PWD',
-  'SHELL',
-  'SHLVL',
-  'SUDO_COMMAND',
-  'SUDO_GID',
-  'SUDO_UID',
-  'SUDO_USER',
-  'TERM',
-  'USER',
-  'USERNAME',
-  '_',
-];
+const {NODE_ENV} = process.env;
+
+const ENV_PATH = path.resolve(process.cwd(), '.env');
+const ENV_OVERRIDE_PATH = path.resolve(process.cwd(), `.env.${NODE_ENV}`);
 
 const getAppVersion = () => info.version;
 const getAppDeps = () => info.dependencies;
@@ -32,10 +15,14 @@ const getAppDeps = () => info.dependencies;
 const getAppVariables = () => {
   const variables = {};
 
-  for (const key in process.env) {
-    if (!SYSTEM_KEYS.includes(key)) {
-      variables[key] = sha1(process.env[key]);
+  [ENV_PATH, ENV_OVERRIDE_PATH].forEach((filepath) => {
+    if (fs.existsSync(filepath)) {
+      Object.assign(variables, dotenv.parse(fs.readFileSync(filepath)));
     }
+  });
+
+  for (const key in variables) {
+    variables[key] = sha1(variables[key]);
   }
 
   return variables;
@@ -50,8 +37,13 @@ const getAppVersionAt = () => {
 };
 
 module.exports = {
+  version: getAppVersion(),
+  versionAt: getAppVersionAt(),
+  variables: getAppVariables(),
+  deps: getAppDeps(),
+
   getAppVersion,
-  getAppDeps,
-  getAppVariables,
   getAppVersionAt,
+  getAppVariables,
+  getAppDeps,
 };

@@ -2,7 +2,7 @@ const _ = require('lodash');
 const {Histogram} = require('prom-client');
 const {RpcError} = require('./errors');
 const {fastJSONParse} = require('./helpers/json');
-const {getAppVersion, getAppDeps, getAppVariables, getAppVersionAt} = require('./helpers/app');
+const app = require('./helpers/app');
 const http = require('./transports/http');
 
 module.exports = {
@@ -56,16 +56,16 @@ module.exports = {
       res.end(JSON.stringify({
         IsAlive: true,
         FrameworkVersion: process.version,
-        AppVersion: getAppVersion(),
-        AppCompilationDate: getAppVersionAt(),
+        AppVersion: app.version,
+        AppCompilationDate: app.versionAt,
         EnvInfo: '',
-        EnvVariablesSha1: getAppVariables(),
+        EnvVariablesSha1: app.variables,
       }));
     });
 
     _.set(config, ['endpoints', '/deps'], (req, res) => {
       res.end(JSON.stringify({
-        DependenciesMap: getAppDeps(),
+        DependenciesMap: app.deps,
       }));
     });
 

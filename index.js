@@ -52,7 +52,7 @@ module.exports = {
       }
     }
 
-    _.set(config, ['endpoints', '/whoami'], (req, res) => {
+    _.set(config, ['endpoints', '/isalive'], (req, res) => {
       res.end(JSON.stringify({
         IsAlive: true,
         FrameworkVersion: process.version,

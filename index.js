@@ -52,7 +52,7 @@ module.exports = {
       }
     }
 
-    _.set(config, ['endpoints', '/isalive'], (req, res) => {
+    _.set(config, ['endpoints', '/internal/isalive'], (req, res) => {
       res.end(JSON.stringify({
         IsAlive: true,
         FrameworkVersion: process.version.substr(1),
@@ -63,7 +63,7 @@ module.exports = {
       }));
     });
 
-    _.set(config, ['endpoints', '/deps'], (req, res) => {
+    _.set(config, ['endpoints', '/internal/dependencies'], (req, res) => {
       res.end(JSON.stringify({
         DependenciesMap: app.deps,
       }));

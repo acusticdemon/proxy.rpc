@@ -6,6 +6,7 @@ const app = require('./helpers/app');
 const http = require('./transports/http');
 
 module.exports = {
+  app,
   RpcError,
 
   async run(controller, config) {

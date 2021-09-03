@@ -9,7 +9,22 @@ const {NODE_ENV} = process.env;
 const ENV_PATH = path.resolve(process.cwd(), '.env');
 const ENV_OVERRIDE_PATH = path.resolve(process.cwd(), `.env.${NODE_ENV}`);
 
-const getAppVersion = () => info.version;
+const getAppVersion = () => {
+  const parts = process.cwd().split('/');
+  const dir = parts[parts.length - 1];
+
+  const matches = dir.match(/(.*)-([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})/);
+
+  if (!matches) {
+    return { date: null, version: null };
+  }
+
+  return {
+    version: matches[1],
+    date: new Date(+matches[2], +matches[3] - 1, +matches[4], +matches[5], +matches[6], +matches[7]),
+  };
+};
+
 const getAppDeps = () => info.dependencies;
 
 const getAppVariables = () => {
@@ -28,22 +43,17 @@ const getAppVariables = () => {
   return variables;
 };
 
-const getAppVersionAt = () => {
-  const matches = process.cwd().match(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
-
-  if (!matches) return null;
-
-  return new Date(+matches[1], +matches[2] - 1, +matches[3], +matches[4], +matches[5], +matches[6]);
-};
-
 module.exports = {
-  version: getAppVersion(),
-  versionAt: getAppVersionAt(),
-  variables: getAppVariables(),
-  deps: getAppDeps(),
+  IsAlive: {
+    IsAlive: true,
+    FrameworkVersion: process.version.substr(1),
+    AppVersion: getAppVersion().version,
+    AppCompilationDate: getAppVersion().date,
+    EnvInfo: '',
+    EnvVariablesSha1: getAppVariables(),
+  },
 
-  getAppVersion,
-  getAppVersionAt,
-  getAppVariables,
-  getAppDeps,
+  Dependencies: {
+    DependenciesMap: getAppDeps(),
+  },
 };

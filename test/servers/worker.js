@@ -14,6 +14,16 @@ class HttpError extends RpcError {
   }
 }
 
+class SerializedJSON {
+  constructor(value) {
+    this.value = value;
+  }
+  toJSON() {
+    return this.value;
+  }
+}
+
+
 const controller = {};
 
 const add = (x, y) => x + y;
@@ -21,6 +31,7 @@ const add = (x, y) => x + y;
 _.set(controller, 'noop', _.noop);
 _.set(controller, 'add.arg', add);
 _.set(controller, 'add.obj', ({x, y}) => add(x, y));
+_.set(controller, 'return.string', ({testStr}) => new SerializedJSON(testStr));
 _.set(controller, 'err.thr.base', () => { throw new Error('Simple error'); });
 _.set(controller, 'err.thr.http', () => { throw new HttpError(400, 'Bad request') });
 

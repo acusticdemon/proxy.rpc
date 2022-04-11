@@ -106,6 +106,7 @@ module.exports = {
           data: JSON.stringify(data)
         });
 
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
         send(res, 200, await process(path, data));
       } catch (err) {
         let {message, details = {}, code = 500, trace} = err;

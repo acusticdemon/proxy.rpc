@@ -11,7 +11,7 @@ const workerPath = path.resolve(__dirname, './servers/worker.js');
 // mute logs
 const logger = {
   info: _.noop,
-  error: _.noop,
+  error: _.noop
 };
 
 const WORKER_PORT = 9900;
@@ -39,6 +39,12 @@ describe('proxy.rpc', async () => {
   it('direct fn', async () => {
     const res = await client.noop();
     expect(res).to.be.equal('ok');
+  });
+
+  it('return prestringified data', async () => {
+    const obj = {'test': 1};
+    const str = await client.return.string({testStr: JSON.stringify(obj)});
+    expect(str).to.be.deep.equal(obj);
   });
 
   it('endpoint', async () => {

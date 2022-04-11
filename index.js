@@ -90,8 +90,8 @@ module.exports = {
 
         if (typeof result === 'undefined') result = {__result: 'ok'};
         if (typeof result !== 'object' || result === null) result = {__result: result};
-        // Adds the ability to use custom stringify functions:
-        if (typeof result.stringify === 'function') result = result.stringify();
+        // Add the ability to pass stringified data:
+        if (typeof result === 'object' && typeof result.__result !== 'undefined') result = result.__result;
 
         if (rpcRequestsHistogram) {
           rpcRequestsHistogram
